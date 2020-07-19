@@ -1,0 +1,64 @@
+version: "3.2"
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: ./_docker/nginx/Dockerfile
+    ports:
+    - "81:80"
+    depends_on:
+      - php-fpm
+    volumes:
+    - ./src/public:/src/www/todo_app/public:cached
+    restart: always
+    tty: true
+    read_only: false
+    privileged: true
+
+  php-fpm:
+    build:
+      context: .
+      dockerfile: ./_docker/php-fpm/Dockerfile
+    depends_on:
+      - mysql
+      - mail
+    volumes:
+    - ./src:/src/www/todo_app:cached
+    restart: always
+    tty: true
+    read_only: false
+    privileged: true
+
+  node.js:
+    build:
+      context: .
+      dockerfile: ./_docker/nodejs/Dockerfile
+    volumes:
+    - .:/build
+    working_dir: /build
+
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_DATABASE: todo_app
+      MYSQL_USER: root
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+      TZ: 'Asia/Tokyo'
+    ports:
+    - "3307:3306"
+    volumes:
+    - mysql-data:/var/lib/mysql
+    restart: always
+    tty: true
+    read_only: false
+    privileged: true
+
+  mail:
+    image: mailhog/mailhog
+    ports:
+    - "8026:8025"
+    - "1026:1025"
+
+volumes:
+  mysql-data:
